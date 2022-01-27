@@ -1,0 +1,70 @@
+image: ubuntu:20.04
+
+variables:
+  VERSION: "latest"
+
+build:
+  only:
+    - schedules
+  cache:
+    key: $CI_PIPELINE_ID
+    paths:
+      - $CI_PROJECT_DIR/VERSION
+      - $CI_PROJECT_DIR/images.tar
+    policy: push
+  script:
+    - |
+      echo "Checking for BYOND version..."
+      if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
+        curl https://secure.byond.com/download/version.txt -o VERSION
+      else
+        echo "$VERSION" > VERSION
+      fi
+
+      echo "Building docker images..."
+      if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
+        docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t douglasparker/byond:latest -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:latest .
+      else
+        docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) .
+      fi
+
+      echo "Saveing docker images..."
+      if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
+        docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) douglasparker/byond:latest ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:latest
+      else
+        docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+      fi
+
+
+release:
+  only:
+    - schedules
+  needs: ["build"]
+  cache:
+    key: $CI_PIPELINE_ID
+    paths:
+      - $CI_PROJECT_DIR/VERSION
+      - $CI_PROJECT_DIR/images.tar
+    policy: pull
+  script:
+    - |
+      echo "Loading docker images..."
+      docker load --input $CI_PROJECT_DIR/images.tar
+
+      echo "Publishing releases to Docker Hub..."
+      docker login -u "$DOCKER_REGISTRY_USERNAME" -p "$DOCKER_REGISTRY_PASSWORD"
+      if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
+        docker push douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+        docker push douglasparker/byond:latest
+      else
+        docker push douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+      fi
+
+      echo "Publishing releases to GitHub Container Registry..."
+      docker login ghcr.io -u "$GH_CONTAINER_REGISTRY_USERNAME" -p "$GH_CONTAINER_REGISTRY_PASSWORD"
+      if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
+        docker push ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+        docker push ghcr.io/douglasparker/byond:latest
+      else
+        docker push ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+      fi
