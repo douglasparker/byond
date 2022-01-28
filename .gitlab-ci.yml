@@ -27,20 +27,16 @@ build:
 
       echo "Building docker images..."
       if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
-        echo "1"
-        #docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t douglasparker/byond:latest -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:latest .
+        docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t douglasparker/byond:latest -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:latest .
       else
-        echo "2"
-        #docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) .
+        docker build --build-arg BYOND_MAJOR=$(echo "$(cut -d'.' -f1 <<< $(cat $CI_PROJECT_DIR/VERSION))") --build-arg BYOND_MINOR=$(echo "$(cut -d'.' -f2 <<< $(cat $CI_PROJECT_DIR/VERSION))") -t douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) -t ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) .
       fi
 
       echo "Saveing docker images..."
       if [ "$VERSION" == "latest" ] || [ "$VERSION" == "" ]; then
-        echo "3"
-        #docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) douglasparker/byond:latest ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:latest
+        docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) douglasparker/byond:latest ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:latest
       else
-        echo "4"
-        #docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
+        docker save --output $CI_PROJECT_DIR/images.tar douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION) ghcr.io/douglasparker/byond:$(cat $CI_PROJECT_DIR/VERSION)
       fi
 
 release:
