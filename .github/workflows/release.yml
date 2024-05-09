@@ -38,7 +38,7 @@ jobs:
           echo "✔️ The latest stable version of BYOND: ${BYOND_VERSION}"
       
       - name: Check for stable linux release binaries
-        id: binaries_stable_release_check
+        id: stable-binaries-check
         continue-on-error: true
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
@@ -56,7 +56,7 @@ jobs:
           fi
       
       - name: Check if the stable release was already published to the Docker Registry
-        id: docker_stable_release_check
+        id: stable-release-check
         continue-on-error: true
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
@@ -67,7 +67,7 @@ jobs:
       
       - name: Build the stable Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v5
-        if: ${{ steps.binaries_stable_release_check.outcome == 'success' && steps.docker_stable_release_check.outcome == 'failure' }}
+        if: ${{ steps.stable-binaries-check.outcome == 'success' && steps.stable-release-check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.stable-version-check.outputs.BYOND_MAJOR_VERSION }}
@@ -95,7 +95,7 @@ jobs:
           echo "✔️ The latest beta version of BYOND: ${BYOND_VERSION}"
       
       - name: Check for beta linux release binaries
-        id: binaries_beta_release_check
+        id: beta-binaries_check
         continue-on-error: true
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
@@ -113,7 +113,7 @@ jobs:
           fi
       
       - name: Check if the beta release was already published to the Docker Registry
-        id: docker_beta_release_check
+        id: beta-release-check
         continue-on-error: true
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
@@ -124,7 +124,7 @@ jobs:
       
       - name: Build the beta Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v5
-        if: ${{ steps.binaries_beta_release_check.outcome == 'success' && steps.docker_beta_release_check.outcome == 'failure' }}
+        if: ${{ steps.beta-binaries_check.outcome == 'success' && steps.beta-release-check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
