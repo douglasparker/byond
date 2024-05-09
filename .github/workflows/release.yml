@@ -13,6 +13,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
@@ -66,8 +68,6 @@ jobs:
       - name: Build the stable Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v4
         if: ${{ steps.binaries_stable_release_check.outcome == 'success' && steps.docker_stable_release_check.outcome == 'failure' }}
-        permissions:
-          packages: write
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.stable-version-check.outputs.BYOND_MAJOR_VERSION }}
@@ -125,8 +125,6 @@ jobs:
       - name: Build the beta Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v4
         if: ${{ steps.binaries_beta_release_check.outcome == 'success' && steps.docker_beta_release_check.outcome == 'failure' }}
-        permissions:
-          packages: write
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
