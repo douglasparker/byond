@@ -37,7 +37,7 @@ jobs:
       
       - name: Check to see if BYOND version exists on byond.com
         run: |
-          HTTP_URL="https://www.byond.com/download/build/{BYOND_MAJOR_VERSION}/{BYOND_VERSION}_byond_linux.zip"
+          HTTP_URL="https://www.byond.com/download/build/${BYOND_MAJOR_VERSION}/${BYOND_VERSION}_byond_linux.zip"
           HTTP_STATUS=$(curl --head --location --silent --write-out %{http_code} --output /dev/null ${HTTP_URL})
 
           echo "URL: ${HTTP_URL}"
