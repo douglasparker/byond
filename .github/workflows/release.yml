@@ -47,7 +47,7 @@ jobs:
           RESPONSE=$(($RESPONSE))
 
           if [ $RESPONSE -eq 200 ]; then
-            echo "✅ Beta linux release binaries were found for BYOND version: ${BYOND_VERSION}"
+            echo "✔️ Beta linux release binaries were found for BYOND version: ${BYOND_VERSION}"
           else
             echo "❌ Beta linux release binaries could not be found for BYOND version: ${BYOND_VERSION}"
             exit $RESPONSE
@@ -66,6 +66,8 @@ jobs:
       - name: Build the stable Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v4
         if: ${{ steps.binaries_stable_release_check.outcome == 'success' && steps.docker_stable_release_check.outcome == 'failure' }}
+        permissions:
+          packages: write
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.stable-version-check.outputs.BYOND_MAJOR_VERSION }}
@@ -104,7 +106,7 @@ jobs:
           RESPONSE=$(($RESPONSE))
 
           if [ $RESPONSE -eq 200 ]; then
-            echo "✅ Beta linux release binaries were found for BYOND version: ${BYOND_VERSION}"
+            echo "✔️ Beta linux release binaries were found for BYOND version: ${BYOND_VERSION}"
           else
             echo "❌ Beta linux release binaries could not be found for BYOND version: ${BYOND_VERSION}"
             exit $RESPONSE
@@ -123,6 +125,8 @@ jobs:
       - name: Build the beta Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v4
         if: ${{ steps.binaries_beta_release_check.outcome == 'success' && steps.docker_beta_release_check.outcome == 'failure' }}
+        permissions:
+          packages: write
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
           BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
