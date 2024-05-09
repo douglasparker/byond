@@ -66,7 +66,7 @@ jobs:
           docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_VERSION }}
       
       - name: Build the stable Docker image and publish to the Docker Registry
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         if: ${{ steps.binaries_stable_release_check.outcome == 'success' && steps.docker_stable_release_check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
@@ -123,7 +123,7 @@ jobs:
           docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_VERSION }}-beta
       
       - name: Build the beta Docker image and publish to the Docker Registry
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         if: ${{ steps.binaries_beta_release_check.outcome == 'success' && steps.docker_beta_release_check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
