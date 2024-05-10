@@ -1,0 +1,63 @@
+image: docker:23
+
+release:
+  stage: build
+  only:
+    - schedules
+    - triggers
+  before_script:
+    - |
+      apk update
+      apk add curl
+  script:
+    - |
+      echo "Logging into the GitLab Container Registry..."
+      docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+
+      echo "⏳ Checking for the latest stable version of BYOND..."
+      BYOND_VERSION=$(sed -n 1p <(curl https://secure.byond.com/download/version.txt))
+      BYOND_MAJOR_VERSION="$(echo "$(cut -d '.' -f 1 <(echo "$BYOND_VERSION"))")"
+      BYOND_MINOR_VERSION="$(echo "$(cut -d '.' -f 2 <(echo "$BYOND_VERSION"))")"
+      echo "BYOND_VERSION=$BYOND_VERSION" >> build.env
+      echo "BYOND_MAJOR_VERSION=$BYOND_MAJOR_VERSION" >> build.env
+      echo "BYOND_MINOR_VERSION=$BYOND_MINOR_VERSION" >> build.env
+      echo "✔️ The latest stable version of BYOND: ${BYOND_VERSION}"
+
+      echo "⏳ Checking for stable linux release binaries..."
+      RESPONSE=$(curl --head --silent "http://www.byond.com/download/build/${BYOND_MAJOR_VERSION}/${BYOND_MAJOR_VERSION}.${BYOND_MINOR_VERSION}_byond_linux.zip" | head -n1 | cut -d ' ' -f 2)
+      RESPONSE=$(($RESPONSE))
+
+      if [ $RESPONSE -eq 200 ]; then
+        echo "✔️ Stable linux release binaries were found for BYOND version: ${BYOND_VERSION}"
+
+        echo "⏳ Checking if the stable release was already published to the Docker Registry..."
+
+        # Disable exit on error (non-zero exit code) to ensure pipelines don't fail when `docker manifest inspect` returns 0
+        set +e
+
+        docker manifest inspect "$CI_REGISTRY_IMAGE:$BYOND_VERSION"
+        if [ $? -eq 0 ]; then
+          echo "✔️ An existing tag was found! A new docker image will not be built."
+        else
+          echo "❌ An existing tag was not found."
+
+          echo "🛠️ Building the Docker images..."
+          docker build --build-arg BYOND_MAJOR="$BYOND_MAJOR_VERSION" --build-arg BYOND_MINOR="$BYOND_MINOR_VERSION" \
+            -t "$CI_REGISTRY_IMAGE:latest" \
+            -t "$CI_REGISTRY_IMAGE:$BYOND_VERSION" \
+            -t "$CI_REGISTRY_IMAGE:$BYOND_MAJOR_VERSION" \
+            .
+          echo "✔️ Docker images have been built successfully."
+          
+          echo "📦 Publishing the Docker images to the GitLab Container Registry..."
+          docker push "$CI_REGISTRY_IMAGE:$BYOND_VERSION"
+          docker push "$CI_REGISTRY_IMAGE:$BYOND_MAJOR_VERSION"
+          docker push "$CI_REGISTRY_IMAGE:latest"
+          echo "✔️ Docker images have been published successfully."
+        fi
+
+        set -e
+
+      else
+        echo "❌ Stable linux release binaries could not be found for BYOND version: ${BYOND_VERSION}"
+      fi

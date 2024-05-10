@@ -1,0 +1,18 @@
+{
+    "enabled": true,
+    "baseBranches": ["main"],
+    "rangeStrategy": "bump",
+    "automerge": false,
+    "semanticCommits": true,
+    "semanticCommitType": "build",
+    "semanticCommitScope": "deps",
+    "assignees": ["@neureka"],
+    "additionalReviewers": ["@neureka"],
+    "labels": ["Priority: 3-High", "Type: Dependency", "Category: Software"],
+    "vulnerabilityAlerts": {
+      "assignees": ["@neureka"],
+      "additionalReviewers": ["@neureka"],
+      "labels": ["Priority: 4-Critical", "Type: Security", "Category: Software"],
+      "confidential": true
+    }
+}
