@@ -90,3 +90,69 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_VERSION }}
             ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_MAJOR_VERSION }}
             ${{ env.REGISTRY }}/${{ github.repository }}:latest
+      
+      # BYOND Beta Releases
+      - name: Check for the latest beta version of BYOND
+        id: beta-version-check
+        run: |
+          echo "⏳ Checking for the latest beta version of BYOND..."
+          BYOND_VERSION="$(sed -n 2p <(curl https://secure.byond.com/download/version.txt))"
+          BYOND_MAJOR_VERSION="$(echo "$(cut -d '.' -f 1 <(echo "$BYOND_VERSION"))")"
+          BYOND_MINOR_VERSION="$(echo "$(cut -d '.' -f 2 <(echo "$BYOND_VERSION"))")"
+          echo "BYOND_VERSION="$BYOND_VERSION"" >> $GITHUB_OUTPUT
+          echo "BYOND_MAJOR_VERSION="$BYOND_MAJOR_VERSION"" >> $GITHUB_OUTPUT
+          echo "BYOND_MINOR_VERSION="$BYOND_MINOR_VERSION"" >> $GITHUB_OUTPUT
+          echo "✔️ The latest beta version of BYOND: ${BYOND_VERSION}"
+      
+      - name: Check for beta linux release binaries
+        id: beta-binaries-check
+        continue-on-error: true
+        env:
+          BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
+          BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
+          BYOND_MINOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MINOR_VERSION }}
+        run: |
+          echo "⏳ Checking for beta linux release binaries..."
+          RESPONSE=$(curl --head --silent "http://www.byond.com/download/build/${BYOND_MAJOR_VERSION}/${BYOND_MAJOR_VERSION}.${BYOND_MINOR_VERSION}_byond_linux.zip" | head -n1 | cut -d ' ' -f 2)
+          RESPONSE=$(($RESPONSE))
+
+          if [ $RESPONSE -eq 200 ]; then
+            echo "✔️ Beta linux release binaries were found for BYOND version: ${BYOND_VERSION}"
+          else
+            echo "❌ Beta linux release binaries could not be found for BYOND version: ${BYOND_VERSION}"
+            exit $RESPONSE
+          fi
+      
+      - name: Check if the beta release was already published to the Docker Registry
+        id: beta-release-check
+        continue-on-error: true
+        env:
+          BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
+          BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
+          BYOND_MINOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MINOR_VERSION }}
+        run: |
+          echo "⏳ Checking if the beta release was already published to the Docker Registry..."
+          docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_VERSION }}
+          if [ $? -eq 0 ]; then
+            echo "✔️ An existing tag was found! A new docker image will not be built."
+          else
+            echo "❌ An existing tag was not found."
+          fi
+      
+      - name: Build the beta Docker image and publish to the Docker Registry
+        uses: docker/build-push-action@v5
+        if: ${{ steps.beta-binaries-check.outcome == 'success' && steps.beta-release-check.outcome == 'failure' }}
+        env:
+          BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
+          BYOND_MAJOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MAJOR_VERSION }}
+          BYOND_MINOR_VERSION: ${{ steps.beta-version-check.outputs.BYOND_MINOR_VERSION }}
+        with:
+          context: .
+          push: true
+          build-args: |
+            BYOND_MAJOR=${{ env.BYOND_MAJOR_VERSION }}
+            BYOND_MINOR=${{ env.BYOND_MINOR_VERSION }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_VERSION }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BYOND_MAJOR_VERSION }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:beta
