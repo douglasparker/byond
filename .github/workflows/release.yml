@@ -16,9 +16,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
