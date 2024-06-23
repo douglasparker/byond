@@ -75,7 +75,7 @@ jobs:
           fi
       
       - name: Build the stable Docker image and publish to the Docker Registry
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: ${{ steps.stable-binaries-check.outcome == 'success' && steps.stable-release-check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.stable-version-check.outputs.BYOND_VERSION }}
@@ -141,7 +141,7 @@ jobs:
           fi
       
       - name: Build the beta Docker image and publish to the Docker Registry
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: ${{ steps.beta-binaries-check.outcome == 'success' && steps.beta-release-check.outcome == 'failure' }}
         env:
           BYOND_VERSION: ${{ steps.beta-version-check.outputs.BYOND_VERSION }}
